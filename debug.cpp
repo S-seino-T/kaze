@@ -8,7 +8,7 @@ int main()
     // Test 1 Lexer
     std::cout << std::endl;
     std::cout << "## Lex Test." << std::endl;
-    t.test_lex("2", "INT(2)");
+    t.test_lex("2;", "INT(2), ;");
     t.test_lex("-1", "-, INT(1)");
     t.test_lex("1+2", "INT(1), +, INT(2)");
     t.test_lex("1+2+3+4+5", "INT(1), +, INT(2), +, INT(3), +, INT(4), +, INT(5)");
