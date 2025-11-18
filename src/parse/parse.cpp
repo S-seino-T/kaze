@@ -8,7 +8,8 @@ const Token &Parser::peek() const
     }
     else
     {
-        throw ParseException("Unexpected last token.");
+        static Token t("EOF", TokenType::END_OF_FILE);
+        return t;
     }
 }
 
@@ -20,15 +21,16 @@ const Token &Parser::get_next_token()
     }
     else
     {
-        throw ParseException("Unexpected last token.");
+        static Token t("EOF", TokenType::END_OF_FILE);
+        return t;
     }
 }
 
-void Parser::expect_token(const TokenType &kind)
+void Parser::expect_token(const Token &token)
 {
-    if (peek().type != kind)
+    if (peek().type != token.type)
     {
-        throw ParseException("Expected " + Token("", kind).to_str() + ", got " + peek().to_str());
+        throw ParseException("Expected " + token.to_str() + ", got " + peek().to_str());
     }
     get_next_token();
 }
@@ -57,11 +59,21 @@ std::unique_ptr<Expr> Parser::literal()
     throw ParseException("Unexpected token in literal: " + peek().to_str());
 }
 
+std::unique_ptr<Expr> Parser::identifier()
+{
+    std::string str = get_next_token().value;
+    return std::make_unique<Var>(str);
+}
+
 std::unique_ptr<Expr> Parser::primary_expression()
 {
     if (peek().type == TokenType::LPAREN)
     {
         return paren_expression();
+    }
+    else if (peek().type == TokenType::VARIABLE)
+    {
+        return identifier();
     }
     else
     {
@@ -76,7 +88,7 @@ std::unique_ptr<Expr> Parser::paren_expression()
     auto ex = expression();
     try
     {
-        expect_token(TokenType::RPAREN);
+        expect_token(Token(")", TokenType::RPAREN));
     }
     catch (const ParseException &e)
     {
@@ -119,13 +131,84 @@ std::unique_ptr<Expr> Parser::unary_expression()
     }
 }
 
+std::unique_ptr<Expr> Parser::let_block()
+{
+    if (peek().type == TokenType::VARIABLE)
+    {
+        return identifier();
+    }
+    else
+    {
+        throw ParseException("Unexpected token in let_block: " + peek().to_str());
+    }
+}
+
+std::unique_ptr<Expr> Parser::additive_expression()
+{
+    try
+    {
+        auto lexpr = unary_expression();
+        while (peek().type == TokenType::PLUS || peek().type == TokenType::MINUS)
+        {
+            if (peek().type == TokenType::PLUS)
+            {
+                get_next_token();
+                auto rexpr = literal();
+                lexpr = std::make_unique<Add>(std::move(lexpr), std::move(rexpr));
+            }
+            else if (peek().type == TokenType::MINUS)
+            {
+                get_next_token();
+                auto rexpr = literal();
+                lexpr = std::make_unique<Sub>(std::move(lexpr), std::move(rexpr));
+            }
+        }
+        return lexpr;
+    }
+    catch (const ParseException &e)
+    {
+        throw e;
+    }
+}
+
 std::unique_ptr<Expr> Parser::expression()
 {
     try
     {
-        return unary_expression();
+        return additive_expression();
     }
     catch (const ParseException &e)
+    {
+        throw e;
+    }
+}
+
+std::unique_ptr<Expr> Parser::variable_declaration()
+{
+    try
+    {
+        get_next_token();
+        auto var = let_block();
+        expect_token(Token("=", TokenType::EQUAL));
+        auto ret = expression();
+        expect_token(Token(";", TokenType::SEMI));
+        return std::make_unique<Let>(std::move(var), std::move(ret));
+    }
+    catch (const ParseException &e)
+    {
+        throw e;
+    }
+}
+
+std::unique_ptr<Expr> Parser::expression_statement()
+{
+    try
+    {
+        auto ret = expression();
+        expect_token(Token(";", TokenType::SEMI));
+        return ret;
+    }
+    catch (const ProjectException &e)
     {
         throw e;
     }
@@ -135,7 +218,14 @@ std::unique_ptr<Expr> Parser::statement()
 {
     try
     {
-        return expression();
+        if (peek().type == TokenType::LET)
+        {
+            return variable_declaration();
+        }
+        else
+        {
+            return expression_statement();
+        }
     }
     catch (const ParseException &e)
     {

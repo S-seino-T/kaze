@@ -28,3 +28,15 @@ class InterpretException : public ProjectException
 public:
     InterpretException(std::string s) : ProjectException(s) {}
 };
+
+class VariableException : public ProjectException
+{
+public:
+    VariableException(std::string s) : ProjectException(s) {}
+};
+
+class FatalException : public ProjectException
+{
+public:
+    FatalException(std::string s) : ProjectException(s) {}
+};

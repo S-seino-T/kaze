@@ -13,20 +13,26 @@ private:
 
     const Token &peek() const;
     const Token &get_next_token();
-    void expect_token(const TokenType &);
+    void expect_token(const Token &);
 
     std::unique_ptr<Expr> integer_literal();
 
     std::unique_ptr<Expr> literal();
+    std::unique_ptr<Expr> identifier();
 
     std::unique_ptr<Expr> primary_expression();
     std::unique_ptr<Expr> paren_expression();
 
     std::unique_ptr<Expr> call_access_expression();
 
+    std::unique_ptr<Expr> additive_expression();
     std::unique_ptr<Expr> unary_expression();
 
     std::unique_ptr<Expr> expression();
+    std::unique_ptr<Expr> let_block();
+
+    std::unique_ptr<Expr> variable_declaration();
+    std::unique_ptr<Expr> expression_statement();
 
     std::unique_ptr<Expr> statement();
 

@@ -4,13 +4,20 @@
 enum class TokenType
 {
     INT,
+    LET,
     VARIABLE,
+    EQUAL,
+    SEMI,
     MINUS,
     PLUS,
+    MULTIPLE,
+    DIVIDE,
+    MODULO,
     LPAREN,
     RPAREN,
     WILDCARD,
     WS,
+    END_OF_FILE,
     UNKNOWN,
 };
 

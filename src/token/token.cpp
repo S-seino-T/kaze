@@ -12,6 +12,8 @@ std::string Token::to_str() const
         return "VAR(" + value + ")";
     case TokenType::WILDCARD:
         return "WILDCARD";
+    case TokenType::LET:
+        return "LET";
     default:
         return value;
     }

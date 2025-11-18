@@ -32,3 +32,5 @@
 #include <filesystem>
 #include <random>
 #include <cstdlib>
+#include <limits>
+#include <compare>
